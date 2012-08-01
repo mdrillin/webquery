@@ -1,0 +1,123 @@
+<!doctype html>
+<!-- The DOCTYPE declaration above will set the    -->
+<!-- browser's rendering engine into               -->
+<!-- "Standards Mode". Replacing this declaration  -->
+<!-- with a "Quirks Mode" doctype may lead to some -->
+<!-- differences in layout.                        -->
+
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+    <!--                                                               -->
+    <!-- Consider inlining CSS to reduce the number of requested files -->
+    <!--                                                               -->
+    <link type="text/css" rel="stylesheet" href="webquery.css">
+
+    <!--                                           -->
+    <!-- Any title is fine                         -->
+    <!--                                           -->
+    <title>Web Query - JDBC</title>
+
+    <!--                                           -->
+    <!-- This script loads your compiled module.   -->
+    <!-- If you add any GWT meta tags, they must   -->
+    <!-- be added before this line.                -->
+    <!--                                           -->
+    <script type="text/javascript" language="javascript" src="webquery/webquery.nocache.js"></script>
+  </head>
+
+  <!--                                           -->
+  <!-- The body can have arbitrary html, or      -->
+  <!-- you can leave the body empty if you want  -->
+  <!-- to create a completely dynamic UI.        -->
+  <!--                                           -->
+  <body>
+
+    <!-- OPTIONAL: include this if you want history support -->
+    <iframe src="javascript:''" id="__gwt_historyFrame" tabIndex='-1' style="position:absolute;width:0;height:0;border:0"></iframe>
+
+    <!-- RECOMMENDED if your web app will not function without JavaScript enabled -->
+    <noscript>
+      <div style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
+        Your web browser must have JavaScript enabled
+        in order for this application to display correctly.
+      </div>
+    </noscript>
+
+    <!-- MAIN TABLE - TOP HALF OF PAGE -->
+    <table width="100%" style="background-color:#F5F5DC;">
+    <tr><td height="350">
+    <table width="100%" align="left" style="background-color:#F5F5DC;padding:10px 0px 0px 20px;">
+            <!-- Title -->
+            <tr><td id="titleLabelContainer" align="left"></td></tr>
+
+            <!-- Source and Table Info -->
+            <tr><td>
+              <table>
+                <tr>
+                  <td></td>
+                  <td id="datasourcesLabelContainer" align="left"></td>
+                  <td></td>
+                  <td id="tablesLabelContainer" align="left"></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td id="refreshButtonContainer" align="left"></td>
+                  <td id="datasourcesListBoxContainer" align="left"></td>
+                  <td id="datasourcesFilterCheckBoxContainer" align="left"></td>
+                  <td id="tablesListBoxContainer" align="left"></td>
+                  <td id="tableLoadStatusLabelContainer" align="left"></td>
+                </tr>
+              </table>
+            </td></tr>
+
+            <!-- Text Area for the SQL -->
+            <tr><td>
+              <table>
+                <tr>
+                  <td id="sqlLabelContainer" align="left"></td>
+                  <td id="columnsLabelContainer" align="left"></td>
+                </tr>
+                <tr>
+                  <td id="sqlTextContainer" align="left"></td>
+                  <td id="columnsTableContainer" align="left"></td>
+                </tr>
+              </table>
+            </td></tr>
+              
+            <!-- Submit and Cancel Buttons -->
+            <tr><td align="left">
+              <table>
+              <tr>
+                <td id="submitButtonContainer"></td>
+              </tr>
+              </table>
+            </td></tr>
+    </table>
+    </td>
+    <!--
+    <td align="left" height="350" style="background-color:#B0CCDC;">
+      <img src="./OpenShift.png" width="350" height="350" />
+    </td>
+    <td id="imageContainer" align="left" height="350" style="background-color:#B0CCDC;"></td>
+    -->
+    </tr>
+    </table>
+    
+    <div>
+    
+    <!-- RESULTS TABLE - BOTTOM HALF OF PAGE -->
+    <table width="100%" align="left" style="padding:10px 0px 0px 20px;">
+
+      <!-- Single Row contains controls and graphic -->
+        <!-- Title -->
+        <tr><td  id="resultsLabelContainer" /></tr>
+
+        <!-- More Info -->
+        <tr><td id="resultsTableContainer"></td></tr>
+        
+    </table>
+       
+  </body>
+</html>
