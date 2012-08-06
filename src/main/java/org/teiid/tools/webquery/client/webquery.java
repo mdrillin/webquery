@@ -17,6 +17,7 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
@@ -34,17 +35,6 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class webquery implements EntryPoint {
-	/**
-	 * The message displayed to the user when the server cannot be reached or
-	 * returns an error.
-	 */
-	private static final String SERVER_ERROR = "An error occurred while "
-		+ "attempting to contact the server. Please check your network "
-		+ "connection and try again.";
-	private static final String DATASOURCE_REFRESH_ERROR = "An error occurred while "
-		+ "attempting to refresh the datasources.";
-	private static final String TABLE_REFRESH_ERROR = "An error occurred while "
-		+ "attempting to refresh the datasource tables.";
 
 	/**
 	 * Create a remote service proxy to talk to the server-side Teiid service.
@@ -72,19 +62,13 @@ public class webquery implements EntryPoint {
 	private Label columnsAreaLabel = new Label();
 
 	private DialogBox errorDialogBox = new DialogBox();
-	private Button errorDialogCloseButton = new Button("Close");
+	private Button errorDialogCloseButton = new Button(messages.closeButton());
 	private HTML serverResponseLabel = new HTML();
 	private DialogBox xmlDialogBox = new DialogBox();
-	private Button xmlDialogCloseButton = new Button("Close");
+	private Button xmlDialogCloseButton = new Button(messages.closeButton());
 	private TextArea xmlDataTextArea = new TextArea();
-//	private Image currentImage;
-//	private Image blankImage = new Image("./OpenShiftBlank.png");
-//	private Image portfolioImage = new Image("./PortfolioVDB.png");
-//	private Image mySQLImage = new Image("./MySQLDB.png");
-//	private Image salesforceImage = new Image("./SalesforceVDB.png");
 	
 	private Map<String,List<String>> tableColMap = new HashMap<String,List<String>>();
-	private Map<String,List<String>> procColMap = new HashMap<String,List<String>>();
 	private Map<String,String> tableTypeMap = new HashMap<String,String>();
 	
 	/**
@@ -97,15 +81,15 @@ public class webquery implements EntryPoint {
 		// ---------------------------------------
 
 		// Title Label
-		titleLabel.setText("Web Query - JDBC");
+		titleLabel.setText(messages.appTitle());
 		titleLabel.addStyleName("applicationTitle");
 		RootPanel.get("titleLabelContainer").add(titleLabel);
 
 		// Datasources, Tables, Procedures :  ListBox Labels
-		datasourcesLabel.setText("Datasources:");
+		datasourcesLabel.setText(messages.datasourcesLabel());
 		datasourcesLabel.addStyleName("headerLabel");
 		RootPanel.get("datasourcesLabelContainer").add(datasourcesLabel);
-		tablesLabel.setText("Tables & Procedures:");
+		tablesLabel.setText(messages.tablesLabel());
 		tablesLabel.addStyleName("headerLabel");
 		RootPanel.get("tablesLabelContainer").add(tablesLabel);
 
@@ -115,11 +99,11 @@ public class webquery implements EntryPoint {
 		tablesLoadStatusLabel.addStyleName("tablesLoadStatusLabel");
 		RootPanel.get("tableLoadStatusLabelContainer").add(tablesLoadStatusLabel);
 
-	    onlyVdbsCheckBox.setText("Teiid VDBs Only");
+	    onlyVdbsCheckBox.setText(messages.onlyVDBsCheckBox());
 	    onlyVdbsCheckBox.setValue(false);
 	    RootPanel.get("datasourcesFilterCheckBoxContainer").add(onlyVdbsCheckBox);
 	    
-	    refreshButton.setText("Refresh");
+	    refreshButton.setText(messages.refreshButton());
 		// Click Handlers for reload button
 	    refreshButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
@@ -129,7 +113,7 @@ public class webquery implements EntryPoint {
 	    RootPanel.get("refreshButtonContainer").add(refreshButton);
 	    
 		// SQL Area Label
-		sqlAreaLabel.setText("SQL Query:");
+		sqlAreaLabel.setText(messages.sqlAreaLabel());
 		sqlAreaLabel.addStyleName("headerLabel");
 		RootPanel.get("sqlLabelContainer").add(sqlAreaLabel);
 
@@ -139,7 +123,7 @@ public class webquery implements EntryPoint {
 		RootPanel.get("sqlTextContainer").add(sqlTextArea);
 
 		// Submit and Cancel Buttons
-		submitButton.setText("Submit");
+		submitButton.setText(messages.submitButton());
 		//cancelButton.setText("Cancel");
 		// Click Handlers for Submit and Cancel
 		submitButton.addClickHandler(new ClickHandler() {
@@ -154,7 +138,7 @@ public class webquery implements EntryPoint {
 		// ---------------------------------------
 
 		// Title Label
-		columnsAreaLabel.setText("Available Columns");
+		columnsAreaLabel.setText(messages.availableColsLabel());
 		columnsAreaLabel.addStyleName("headerLabel");
 		RootPanel.get("columnsLabelContainer").add(columnsAreaLabel);
 		
@@ -164,16 +148,12 @@ public class webquery implements EntryPoint {
         colScroll.setHeight("150px");
 		RootPanel.get("columnsTableContainer").add(colScroll);
 
-		// Graphic on RH upper panel
-//		currentImage = blankImage;
-//		RootPanel.get("imageContainer").add(currentImage);
-
 		// ---------------------------------------
 		// Set Results area widgets
 		// ---------------------------------------
 
 		// Title Label
-		resultsAreaLabel.setText("Query Results - 0 Rows");
+		resultsAreaLabel.setText(messages.resultsLabelNoRows());
 		resultsAreaLabel.addStyleName("resultsPanelTitle");
 		RootPanel.get("resultsLabelContainer").add(resultsAreaLabel);
 		
@@ -181,8 +161,14 @@ public class webquery implements EntryPoint {
 		resultsTable.addStyleName("resultsTable");
 
 		ScrollPanel resultsScroll = new ScrollPanel(resultsTable);
-		resultsScroll.setHeight("350px");
-		resultsScroll.setWidth("1300px");
+		// Result Panel - 
+		//     scrollPanel height = Total Height - upper area (350px) - 60px
+		//     scrollPanel width = Total Width - 50px 
+		int windowHeight=Window.getClientHeight()-410; 
+		int windowWidth=Window.getClientWidth()-50; 
+		resultsScroll.setHeight(String.valueOf(windowHeight)+"px");
+		resultsScroll.setWidth(String.valueOf(windowWidth)+"px");
+		
 		RootPanel.get("resultsTableContainer").add(resultsScroll);
 
 		// Init Dialogs for later use.
@@ -201,7 +187,6 @@ public class webquery implements EntryPoint {
 				int selectedIndex = datasourceListBox.getSelectedIndex();
 				String selectedDS = datasourceListBox.getValue(selectedIndex);
 				refreshTablesListBox(selectedDS);
-				//updateGraphic(selectedDS);
 			}
 		});
 
@@ -215,7 +200,7 @@ public class webquery implements EntryPoint {
 				String selectedTable = tablesListBox.getValue(selectedIndex);
 				refreshColumnsTable(selectedTable);
 				refreshSQLTextArea();
-				populateNoResultsToDisplay();
+				setResultsDisplay_NoResults(messages.resultsLabelNoRows());
 				submitButton.setEnabled(true);
 			}
 		});
@@ -250,13 +235,8 @@ public class webquery implements EntryPoint {
 		AsyncCallback<String[]> callback = new AsyncCallback<String[]>() {
 			// On Failure - show Error Dialog
 			public void onFailure(Throwable caught) {
-				// Dialog Title
-				errorDialogBox.setText("Datasource Refresh Error");
-				serverResponseLabel.addStyleName("serverResponseLabelError");
-				// Dialog Message
-				serverResponseLabel.setHTML(DATASOURCE_REFRESH_ERROR);
-				errorDialogBox.center();
-				errorDialogCloseButton.setFocus(true);
+				// Show Error Dialog
+				showErrorDialog(messages.datasourceRefreshErrorTitle(),messages.datasourceRefreshErrorMsg());
 			}
 
 			// On Success - Populate the ListBox with Datasource Names
@@ -285,24 +265,6 @@ public class webquery implements EntryPoint {
 	}
 
 	/*
-	 * Update the RH Upper panel Image, based on the selected datasource
-	 */
-//	private void updateGraphic(String datasourceName) {
-//		RootPanel panel = RootPanel.get("imageContainer");
-//		panel.remove(currentImage);
-//		if(datasourceName.equals("java:/Accounts")) {
-//			currentImage = mySQLImage;
-//		} else if(datasourceName.equals("java:/PortfolioVDB")) {
-//			currentImage = portfolioImage;
-//		} else if(datasourceName.equals("java:/SalesforceVDB")) {
-//			currentImage = salesforceImage;
-//		} else {
-//			currentImage = blankImage;
-//		}
-//		panel.add(currentImage);
-//	}
-	
-	/*
 	 * Refresh the Tables ListBox.  Populates the List with all tables for
 	 * the supplied dataSource, and sets the SQL Area Text
 	 */
@@ -316,13 +278,10 @@ public class webquery implements EntryPoint {
 				tablesLoadStatusLabel.setText("");
 				
 				tableTypeMap.clear();
-				// Dialog Title
-				errorDialogBox.setText("Datasource Tables Refresh Error");
-				serverResponseLabel.addStyleName("serverResponseLabelError");
-				// Dialog Message
-				serverResponseLabel.setHTML(TABLE_REFRESH_ERROR);
-				errorDialogBox.center();
-				errorDialogCloseButton.setFocus(true);
+				
+				// Show Error Dialog
+				showErrorDialog(messages.tablesRefreshErrorTitle(),messages.tablesRefreshErrorMsg());
+
 				submitButton.setEnabled(true);
 			}
 
@@ -367,7 +326,7 @@ public class webquery implements EntryPoint {
 				
 				// Refresh SQL Area
 				refreshSQLTextArea();
-				populateNoResultsToDisplay();
+				setResultsDisplay_NoResults(messages.resultsLabelNoRows());
 				
 				submitButton.setEnabled(true);
 				tablesLoadStatusLabel.setText("");
@@ -380,7 +339,7 @@ public class webquery implements EntryPoint {
 		//   - Display 'Loading Tables...' message
 		if(tablesListBox.getItemCount()>0) tablesListBox.clear();
 		clearColumnsTable();
-		tablesLoadStatusLabel.setText("Loading Tables...");
+		tablesLoadStatusLabel.setText(messages.tablesLoadStatusMsg());
 
 		// Make the remote server call.
 		teiidService.getTableAndColMap(datasourceName, callback);
@@ -458,7 +417,7 @@ public class webquery implements EntryPoint {
 		StringBuffer sb = new StringBuffer();
 		if(type==null || type.equalsIgnoreCase("TABLE")) {
 			sb.append("SELECT * FROM ");
-			if(!selectedTable.equalsIgnoreCase("NO TABLES")) {
+			if(!selectedTable.equalsIgnoreCase("NO TABLES OR PROCS")) {
 				sb.append(selectedTable);
 			}
 		} else if(type.equalsIgnoreCase("PROC")) {
@@ -477,7 +436,6 @@ public class webquery implements EntryPoint {
 		// Get the selected source
 		int srcIndex = datasourceListBox.getSelectedIndex();
 		String selectedSource = datasourceListBox.getValue(srcIndex);
-		//submitButton.setEnabled(false);
 
 		// Get SQL
 		String sql = sqlTextArea.getText();
@@ -486,17 +444,14 @@ public class webquery implements EntryPoint {
 		AsyncCallback<List<List<DataItem>>> callback = new AsyncCallback<List<List<DataItem>>>() {
 			// On Failure - show Error Dialog
 			public void onFailure(Throwable caught) {
-				String msg = SERVER_ERROR;
+				String msg = messages.serverErrorMsg();
 				if(caught instanceof SQLProcException) {
 					msg = ((SQLProcException)caught).getSqlDetail();
 				}
-				// Dialog Title
-				errorDialogBox.setText("Query Submittal Error");
-				serverResponseLabel.addStyleName("serverResponseLabelError");
-				// Dialog Text
-				serverResponseLabel.setHTML(msg);
-				errorDialogBox.center();
-				errorDialogCloseButton.setFocus(true);
+				// Show Error Dialog
+				showErrorDialog(messages.querySubmittalErrorTitle(),msg);
+				
+				setResultsDisplay_NoResults(messages.resultsLabelNoRows());
 				submitButton.setEnabled(true);
 			}
 
@@ -506,7 +461,10 @@ public class webquery implements EntryPoint {
 				submitButton.setEnabled(true);
 			}
 		};
-
+		
+		submitButton.setEnabled(false);
+		setResultsDisplay_NoResults(messages.resultsLabelFetchingRows());
+		
 		teiidService.executeSql(selectedSource, sql, callback);
 	}
 	
@@ -526,16 +484,11 @@ public class webquery implements EntryPoint {
 					final String xmlData = data.getData();
 					// Show XML Button
 					Button xmlButton = new Button();
-					xmlButton.setText("Show XML");
+					xmlButton.setText(messages.xmlButton());
 					// Click Handlers for Submit and Cancel
 					xmlButton.addClickHandler(new ClickHandler() {
 						public void onClick(ClickEvent event) {
-							// Dialog Title
-							xmlDialogBox.setText("XML Result");
-							// Dialog Message
-							xmlDataTextArea.setText(xmlData);
-							xmlDialogBox.center();
-							xmlDialogCloseButton.setFocus(true);
+							showXMLDialog(messages.xmlResultDialogTitle(),xmlData);
 						}
 					});
 					resultsTable.setWidget(iRow, i, xmlButton);
@@ -563,9 +516,10 @@ public class webquery implements EntryPoint {
 	}
 	
 	/*
-	 * Clear the Results Table and re-populate it with the supplied data
+	 * Set Results Display - No Results
+	 * @param labelText the text to display for the panel label
 	 */
-	private void populateNoResultsToDisplay( ) {
+	private void setResultsDisplay_NoResults(String labelText) {
 		// Clear Previous Results
 		clearResultsTable();
 
@@ -573,7 +527,7 @@ public class webquery implements EntryPoint {
 		resultsTable.setText(0,0,"No Results to Display");
 		resultsTable.getRowFormatter().addStyleName(0, "resultsTableHeader");
 		
-		resultsAreaLabel.setText("Query Results - 0 Rows");
+		resultsAreaLabel.setText(labelText);
 	}
 	
 	/*
@@ -622,18 +576,10 @@ public class webquery implements EntryPoint {
 	}
 
 	/*
-	 * Handler for Cancel Button Pressed
-	 */
-//	private void doCancel() {
-//		Window.alert("Cancel Button Pressed");
-//	}
-
-	/*
 	 * Init the Dialog for Error Display
 	 */
 	private void initErrorDialog() {
 		// Create the popup Error DialogBox
-		errorDialogBox.setText("Error Dialog");
 		errorDialogBox.setAnimationEnabled(true);
 		// We can set the id of a widget by accessing its Element
 		errorDialogCloseButton.getElement().setId("closeButton");
@@ -654,12 +600,22 @@ public class webquery implements EntryPoint {
 	}
 	
 	/*
+	 * Show the Dialog for Error Display
+	 */
+	private void showErrorDialog(String title, String msg) {
+		// Dialog Title
+		errorDialogBox.setText(title);
+		serverResponseLabel.addStyleName("serverResponseLabelError");
+		// Dialog Text
+		serverResponseLabel.setHTML(msg);
+		errorDialogBox.center();
+		errorDialogCloseButton.setFocus(true);
+	}
+	
+	/*
 	 * Init the Dialog for Error Display
 	 */
 	private void initXmlDialog() {
-		// Create the popup Error DialogBox
-		xmlDialogBox.setText("XML Result");
-		//xmlDialogBox.setAnimationEnabled(true);
 		// We can set the id of a widget by accessing its Element
 		xmlDialogCloseButton.getElement().setId("closeButton");
 		VerticalPanel dialogVPanel = new VerticalPanel();
@@ -681,20 +637,17 @@ public class webquery implements EntryPoint {
 			}
 		});
 	}
+	
+	/*
+	 * Show the Dialog for XML Result Display
+	 */
+	private void showXMLDialog(String title,String xmlData) {
+		// Dialog Title
+		xmlDialogBox.setText(title);
+		// Dialog Message
+		xmlDataTextArea.setText(xmlData);
+		xmlDialogBox.center();
+		xmlDialogCloseButton.setFocus(true);
+	}
 		
-//	public static String prettyFormat(String input, int indent) {
-//	    try {
-//	        Source xmlInput = new StreamSource(new StringReader(input));
-//	        StringWriter stringWriter = new StringWriter();
-//	        StreamResult xmlOutput = new StreamResult(stringWriter);
-//	        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-//	        transformerFactory.setAttribute("indent-number", indent);
-//	        Transformer transformer = transformerFactory.newTransformer(); 
-//	        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-//	        transformer.transform(xmlInput, xmlOutput);
-//	        return xmlOutput.getWriter().toString();
-//	    } catch (Exception e) {
-//	        throw new RuntimeException(e); // simple exception handling, please review it
-//	    }
-//	}
 }

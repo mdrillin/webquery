@@ -40,6 +40,19 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
     private static final String JDBC_PREFIX = "java:/";
     private static final String TEIID_DRIVER_PREFIX = "teiid";
     
+    private static final String UPDATE = "UPDATE";
+    private static final String INSERT = "INSERT";
+    private static final String DELETE = "DELETE";
+    private static final String TABLE_NAME = "TABLE_NAME";
+    private static final String TABLE_SCHEM = "TABLE_SCHEM";
+    private static final String PROCEDURE_NAME = "PROCEDURE_NAME";
+    private static final String PROCEDURE_SCHEM = "PROCEDURE_SCHEM";
+    private static final String SYS = "SYS";
+    private static final String SYSADMIN = "SYSADMIN";
+    private static final String COLUMN_NAME = "COLUMN_NAME";
+    private static final String COLUMN_TYPE = "COLUMN_TYPE";
+    private static final String TYPE_NAME = "TYPE_NAME";
+    
 	private Map<String,DataSource> mDatasources = new TreeMap<String,DataSource>();
 	private Map<String,String> mDatasourceSchemas = new TreeMap<String,String>();
 
@@ -89,23 +102,38 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 		// Result map of TableName with it's associated ColumnNames
 		Map<String,List<String>> resultMap = new HashMap<String,List<String>>();
 
+		boolean noTablesOrProcs = false;
 		String[] tables = null;
-		// Get Tables for the Datasource
+		String[] procs = null;
+		// Get Tables and Procedures for the Datasource
 		if(connection==null || (dataSource!=null && dataSource.equalsIgnoreCase("NO SOURCES"))) {
-			tables = new String[1];
-			tables[0] = "NO TABLES";
+			noTablesOrProcs = true;
 		} else {
+			// Get Tables and Procs for the Datasource
 			tables = getTables(connection);
-			if(tables.length==0) {
-				tables = new String[1];
-				tables[0] = "NO TABLES";
+			procs = getProcedures(connection);
+			
+			// Determine if zero tables and procs
+			if(tables.length==0 && procs.length==0) {
+				noTablesOrProcs = true;
 			}
 		}
 
+		// If there are zero tables and procedures, we can return here
+		if(noTablesOrProcs) {
+			// Return resultMap with "No Tables or Procs" designator
+			resultMap.put("NO TABLES OR PROCS|TABLE", new ArrayList<String>());
+			
+			// Close Connection
+			closeConnection(connection);
+			
+			return resultMap;
+		}
+		
 		// Get Columns for each table.  Put entry in the Map
 		for(int i=0; i<tables.length; i++) {
 			String[] cols = getColumnsForTable(connection,tables[i]);
-			List<String> colList = Collections.EMPTY_LIST;
+			List<String> colList = Collections.emptyList();
 			if(cols!=null) {
 				colList = Arrays.asList(cols);
 			}
@@ -113,19 +141,15 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 			resultMap.put(tables[i]+"|TABLE", colList);
 		}
 		
-		// Get Procedures for the Datasource
-		if(connection!=null && dataSource!=null && !dataSource.equalsIgnoreCase("NO SOURCES")) {
-			String[] procs = getProcedures(connection);
-			// Get Columns for each procedure.  Put entry in the Map
-			for(int i=0; i<procs.length; i++) {
-				String[] cols = getColumnsForProcedure(connection,procs[i]);
-				List<String> colList = Collections.EMPTY_LIST;
-				if(cols!=null) {
-					colList = Arrays.asList(cols);
-				}
-				// Add 'PROC' designator onto Map Key
-				resultMap.put(procs[i]+"|PROC", colList);
+		// Get Columns for each procedure.  Put entry in the Map
+		for(int i=0; i<procs.length; i++) {
+			String[] cols = getColumnsForProcedure(connection,procs[i]);
+			List<String> colList = Collections.emptyList();
+			if(cols!=null) {
+				colList = Arrays.asList(cols);
 			}
+			// Add 'PROC' designator onto Map Key
+			resultMap.put(procs[i]+"|PROC", colList);
 		}
 		
 		// Close the connection when finished
@@ -136,17 +160,6 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 
 			}
 		}
-		
-//		Set<String> tableProcKeys = resultMap.keySet();
-//		Iterator<String> keyIter = tableProcKeys.iterator();
-//		while(keyIter.hasNext()) {
-//			String tableProcKey = keyIter.next();
-//			int vBarIndx = tableProcKey.indexOf('|');
-//			String name = tableProcKey.substring(0, vBarIndx);
-//			String type = tableProcKey.substring(vBarIndx+1);
-//			System.out.println("Name: "+name);
-//			System.out.println("Type: "+type);
-//		}
 		
 		return resultMap;
 	}
@@ -165,9 +178,10 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 			if(connection!=null && sql!=null && sql.trim().length()>0) {
 				sql = sql.trim();
 				Statement stmt = connection.createStatement();
-
+                String sqlUpperCase = sql.toUpperCase();
+                
 				// INSERT / UPDATE / DELETE - execute as an Update 
-				if(sql.startsWith("INSERT") || sql.startsWith("UPDATE") || sql.startsWith("DELETE")) {
+				if(sqlUpperCase.startsWith(INSERT) || sqlUpperCase.startsWith(UPDATE) || sqlUpperCase.startsWith(DELETE)) {
 					int rowCount = stmt.executeUpdate(sql);
 					List<DataItem> resultRow = new ArrayList<DataItem>();
 					resultRow.add(new DataItem(rowCount+" Rows Updated",""));
@@ -236,7 +250,6 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 					}
 				}
 			} catch (SQLException e) {
-                System.out.println("Error getting the Source Driver Name");
 			} finally {
 				if(conn!=null) {
 					try {
@@ -268,9 +281,9 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 					for (int i=1 ; i<=columnCount ; ++i) {
 						String colName = resultSet.getMetaData().getColumnName(i);
 						String value = resultSet.getString(i);
-						if (colName.equalsIgnoreCase("TABLE_NAME")) {
+						if (colName.equalsIgnoreCase(TABLE_NAME)) {
 							tableName = value;
-						} else if(colName.equalsIgnoreCase("TABLE_SCHEM")) {
+						} else if(colName.equalsIgnoreCase(TABLE_SCHEM)) {
 							tableSchema = value;
 						}
 					}
@@ -321,13 +334,13 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 					for (int i=1 ; i<=columnCount ; ++i) {
 						String colName = resultSet.getMetaData().getColumnName(i);
 						String value = resultSet.getString(i);
-						if (colName.equalsIgnoreCase("PROCEDURE_NAME")) {
+						if (colName.equalsIgnoreCase(PROCEDURE_NAME)) {
 							procName = value;
-						} else if(colName.equalsIgnoreCase("PROCEDURE_SCHEM")) {
+						} else if(colName.equalsIgnoreCase(PROCEDURE_SCHEM)) {
 							procSchema = value;
 						}
 					}
-					if(procSchema!=null && !procSchema.equalsIgnoreCase("SYS") && !procSchema.equalsIgnoreCase("SYSADMIN")) {
+					if(procSchema!=null && !procSchema.equalsIgnoreCase(SYS) && !procSchema.equalsIgnoreCase(SYSADMIN)) {
 						procNameList.add(procName);
 						procSchemaList.add(procSchema);
 					}
@@ -367,9 +380,6 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 		if(connection==null || fullTableName==null || fullTableName.trim().isEmpty()) {
 			return null;
 		}
-		if(fullTableName!=null && fullTableName.equalsIgnoreCase("NO TABLES")) {
-			return null;
-		}
 		List<String> columnNameList = new ArrayList<String>();
 		List<String> columnTypeList = new ArrayList<String>();
 		String schemaName = null;
@@ -386,8 +396,8 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 		try {
 			ResultSet resultSet = connection.getMetaData().getColumns(null, schemaName, tableName, null);
 			while(resultSet.next()) {
-				String columnName = resultSet.getString("COLUMN_NAME");
-				String columnType = resultSet.getString("TYPE_NAME");
+				String columnName = resultSet.getString(COLUMN_NAME);
+				String columnType = resultSet.getString(TYPE_NAME);
 				columnNameList.add(columnName);
 				columnTypeList.add(columnType);
 			}
@@ -426,9 +436,6 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 		if(connection==null || fullProcName==null || fullProcName.trim().isEmpty()) {
 			return null;
 		}
-		if(fullProcName!=null && fullProcName.equalsIgnoreCase("NO TABLES")) {
-			return null;
-		}
 		List<String> columnNameList = new ArrayList<String>();
 		List<String> columnDataTypeList = new ArrayList<String>();
 		List<String> columnDirTypeList = new ArrayList<String>();
@@ -446,9 +453,9 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 		try {
 			ResultSet resultSet = connection.getMetaData().getProcedureColumns(null, schemaName, procName, null);
 			while(resultSet.next()) {
-				String columnName = resultSet.getString("COLUMN_NAME");
-				String columnType = resultSet.getString("COLUMN_TYPE");
-				String columnDataType = resultSet.getString("TYPE_NAME");
+				String columnName = resultSet.getString(COLUMN_NAME);
+				String columnType = resultSet.getString(COLUMN_TYPE);
+				String columnDataType = resultSet.getString(TYPE_NAME);
 				columnNameList.add(columnName);
 				columnDataTypeList.add(columnDataType);
 				columnDirTypeList.add(getProcColumnDirType(columnType));
@@ -541,11 +548,22 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 				try {
 					connection = dataSource.getConnection();
 				} catch (SQLException e) {
-					System.out.println("Error getting the Connection...");
 				}
 			}
 		}
 		return connection;
+	}
+	
+	/*
+	 * Close the supplied connection
+	 */
+	private void closeConnection(Connection conn) {
+		if(conn!=null) {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+			}
+		}
 	}
 	
 	/*
@@ -561,7 +579,6 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 			try {
 				context = new InitialContext();
 			} catch (Exception e) {
-				System.out.println("Error initializing Context");
 			}
 		}
 		
@@ -574,7 +591,6 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 				Context jdbcContext = (Context) context.lookup(JDBC_PREFIX);
 				ne = jdbcContext.list("");
 			} catch (NamingException e1) {
-				System.out.println("Error with JDBC lookup");
 			}
 			while (ne!=null && ne.hasMoreElements()) {
 				javax.naming.NameClassPair o = (javax.naming.NameClassPair) ne.nextElement();

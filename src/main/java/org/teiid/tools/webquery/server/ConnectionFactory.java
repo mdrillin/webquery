@@ -1,7 +1,6 @@
 package org.teiid.tools.webquery.server;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,7 +16,6 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
 
 /**
@@ -120,17 +118,6 @@ public class ConnectionFactory {
 	}
 	
 	/*
-	 * Get Connection for the specified DataSource Name
-	 */
-	public Admin getAdminApi (String serverHost, int serverPort) throws Exception {
-		Admin admin = null;
-		char[] pw = new char[]{'a','d','m','i','n'};
-		
-		admin = AdminFactory.getInstance().createAdmin(serverHost, serverPort,"admin",pw);
-		return admin;
-	}
-
-	/*
 	 * Get Datasource Schema for the specified DataSource Name
 	 */
 	public String getDataSourceSchema (String datasourceName) throws SQLException {
@@ -139,6 +126,8 @@ public class ConnectionFactory {
 	
 	/*
 	 * Get List of all available Datasource Names
+	 * @param teiidOnly flag to determine return of teiid only (or all)
+	 * @return the array of DataSource names
 	 */
 	public String[] getAllDataSourceNames(boolean teiidOnly) {
 		// Re-init the sources - to ensure we have most recent list
@@ -171,6 +160,11 @@ public class ConnectionFactory {
 		return resArray;
 	}
 	
+	/*
+	 * Determine if the supplied source is a Teiid source
+	 * @param dataSource the supplied DataSource
+	 * @return 'true' if Teiid source, 'false' if not.
+	 */
 	public boolean isTeiidSource(DataSource dataSource) {
 		boolean isVdb = false;
 		Connection conn = null;
@@ -198,6 +192,9 @@ public class ConnectionFactory {
 		return isVdb;
 	}
 	
+	/*
+	 * Close any existing connections that are open
+	 */
 	private void closeExistingConnections() {
 		// Iterate Datasource names, close connections
 		Set<String> dsNames = mDatasources.keySet();
