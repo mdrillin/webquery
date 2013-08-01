@@ -75,11 +75,13 @@ public class TeiidServiceImpl extends RemoteServiceServlet implements TeiidServi
 		Iterator<String> nameIter = dsNames.iterator();
 		while(nameIter.hasNext()) {
 			String dsName = nameIter.next();
-			DataSource ds = mDatasources.get(dsName);
-			if(!teiidOnly) {
-				resultList.add(dsName);
-			} else if(isTeiidSource(ds)) {
-				resultList.add(dsName);
+			if(dsName!=null && !dsName.startsWith("java:/PREVIEW_")) {
+				DataSource ds = mDatasources.get(dsName);
+				if(!teiidOnly) {
+					resultList.add(dsName);
+				} else if(isTeiidSource(ds)) {
+					resultList.add(dsName);
+				}
 			}
 		}
 		String[] resArray = new String[resultList.size()];

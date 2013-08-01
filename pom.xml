@@ -52,44 +52,36 @@
       <classifier>sources</classifier>
       <scope>test</scope>
     </dependency>
+  	<dependency>
+  	  <groupId>org.jboss</groupId>
+  	  <artifactId>jboss-dmr</artifactId>
+  	  <version>1.1.6.Final-redhat-1</version>
+  	</dependency>
+  	<dependency>
+  	  <groupId>org.jboss.as</groupId>
+  	  <artifactId>jboss-as-cli</artifactId>
+  	  <version>7.2.0.Final-redhat-8</version>
+  	</dependency>
+  	<dependency>
+      <groupId>org.jboss.as</groupId>
+  	  <artifactId>jboss-as-controller-client</artifactId>
+  	  <version>7.2.0.Final-redhat-8</version>
+  	</dependency>
 	<dependency>
-	    <groupId>org.jboss.teiid</groupId>
-	    <artifactId>teiid-common-core</artifactId>
-            <version>8.1.0.Beta2-SNAPSHOT</version>
+	  <groupId>org.jboss.teiid</groupId>
+	  <artifactId>teiid-common-core</artifactId>
+      <version>8.4.1</version>
 	</dependency>
 	<dependency>
-	    <groupId>org.jboss.teiid</groupId>
-	    <artifactId>teiid-client</artifactId>
-            <version>8.1.0.Beta2-SNAPSHOT</version>
+	  <groupId>org.jboss.teiid</groupId>
+	  <artifactId>teiid-client</artifactId>
+      <version>8.4.1</version>
 	</dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-admin</artifactId>
-            <version>8.1.0.Beta2-SNAPSHOT</version>
-        </dependency> 
-    <!-- 
     <dependency>
-      <groupId>org.teiid.admin</groupId>
-      <artifactId>admin-api</artifactId>
-      <version>1.0</version>
-      <scope>system</scope>
-      <systemPath>/home/mdrillin/adminjar/teiid-admin-8.1.0.Beta1.jar</systemPath>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid.core</groupId>
-      <artifactId>common-core</artifactId>
-      <version>1.0</version>
-      <scope>system</scope>
-      <systemPath>/home/mdrillin/adminjar/teiid-common-core-8.1.0.Beta1.jar</systemPath>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid.client</groupId>
-      <artifactId>client</artifactId>
-      <version>1.0</version>
-      <scope>system</scope>
-      <systemPath>/home/mdrillin/adminjar/teiid-client-8.1.0.Beta1.jar</systemPath>
-    </dependency>
-     -->
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-admin</artifactId>
+      <version>8.4.1</version>
+    </dependency>  
   </dependencies>
 
   <build>
@@ -149,7 +141,40 @@
         </configuration>
       </plugin>
     </plugins>
-    
-  </build>
 
+    <pluginManagement>
+    	<plugins>
+    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+    		<plugin>
+    			<groupId>org.eclipse.m2e</groupId>
+    			<artifactId>lifecycle-mapping</artifactId>
+    			<version>1.0.0</version>
+    			<configuration>
+    				<lifecycleMappingMetadata>
+    					<pluginExecutions>
+    						<pluginExecution>
+    							<pluginExecutionFilter>
+    								<groupId>org.codehaus.mojo</groupId>
+    								<artifactId>
+    									gwt-maven-plugin
+    								</artifactId>
+    								<versionRange>
+    									[2.4.0,)
+    								</versionRange>
+    								<goals>
+    									<goal>generateAsync</goal>
+    									<goal>i18n</goal>
+    								</goals>
+    							</pluginExecutionFilter>
+    							<action>
+    								<ignore></ignore>
+    							</action>
+    						</pluginExecution>
+    					</pluginExecutions>
+    				</lifecycleMappingMetadata>
+    			</configuration>
+    		</plugin>
+    	</plugins>
+    </pluginManagement>
+  </build>
 </project>
